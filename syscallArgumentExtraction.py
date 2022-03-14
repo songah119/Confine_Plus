@@ -23,12 +23,14 @@ import extraction
 global all_funcs
 
 
+
 all_funcs=[]
 weakalias=[]
 syslits=[]
 
 sysmap={}
-logging.getLogger('angr').setLevel('WARNING')
+
+
 class Syscallo:
     def __init__(self, name, address):
         self.name = name
@@ -36,8 +38,11 @@ class Syscallo:
 
         
 def main(containerName,libcVersion):
-    with open('./input/AllSyscall') as f:
-        sysmap= f.read()
+    logging.getLogger('angr').setLevel('CRITICAL')
+    logger = logging.getLogger('my-logger')
+    logger.propagate = False
+    sysmap =util.readDictFromFile('./input/AllSyscall')
+    #print(sysmap[4])
     weakAliasFile=open("./input/weakalias","r")
     for line in weakAliasFile:
         line=line.strip()
@@ -48,6 +53,9 @@ def main(containerName,libcVersion):
         line=line.strip()
         syslits.append(line)
     syslitsFile.close()
+    	       
+    print("\n\n\033[0;37;42m   Please be patientt, the process takes time \033[0m \n")
+    print("\033[5;37;40m it is executing ....\033[0;37;40m\n\n")
     extractLibcfuncs(libcVersion)
     global proj
     global cfg
@@ -68,7 +76,7 @@ def main(containerName,libcVersion):
                   detectDirectcalls(containerName)
                   extraction.extract(binary,all_funcs,containerName,libcVersion)
     printing.combine_argument_values(containerName)
-
+    
 def extractLibcfuncs(libcVersion):
     proj1 = angr.Project("./input/libc-"+libcVersion+".so", auto_load_libs=False)
     cfg1 = proj1.analyses.CFGFast(normalize=True)
@@ -153,7 +161,7 @@ def detectDirectcalls(containerName):
       
 
 def syscallargs_extractor(func,target: int,containerName):
-   
+    whiteSys=open("./result/result_"+containerName+"/syscallslist","w")
     file = open("./error/syscalls", "a")
     file1 = open("./error/errors", "a")
     main_func = cfg.kb.functions[func]
@@ -193,6 +201,7 @@ def syscallargs_extractor(func,target: int,containerName):
                tmp=tmp[indx1+2:indx2-1]
                syscall_name=sysmap[int(tmp,16)]
                if syscall_name in syslits:
+                    whiteSys.write(syscall_name+"\n")
                     regs=mapping(syscall_name)
                     syscall_name = syscall_name.replace("64", "")
                     syscall_name = syscall_name.replace("__", "")
@@ -260,7 +269,7 @@ def syscallargs_extractor(func,target: int,containerName):
     file.write("\n")            
     ###########################################################
     file.close() 
-    
+    whiteSys.close()
     
     
     

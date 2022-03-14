@@ -3,111 +3,82 @@ import re
 import seccomp
 import logging
 import subprocess
+import util 
 
-
+syslist=[]
 arg_map = {'edi':'0','esi':'1','edx':'2','ecx':'3','r8d':'4','r9d':'5'}
 def runCommand(cmd):
     proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    #print("running cmd: " + cmd)
+    #proc.wait()
     (out, err) = proc.communicate()
     outStr = str(out.decode("utf-8"))
     errStr = str(err.decode("utf-8"))
+    #print("finished running cmd: " + cmd)
     return (proc.returncode, outStr, errStr)
+    #return (proc.returncode, out, err)
     
     
 def create_profile(containerName):
-    evalFile=open("./output/aggrigatedResult.txt","a")
-    blackProfile=open("./result/result_"+containerName+"/blackProfile.txt","w")
-    inputFile=open("./input/seccomp.c","r")
+    white_list=[]
+    syscallmap={}
+    syscallmap=util.readDictFromFile('./input/AllSyscall')
+    for key, value in syscallmap.items():
+        syslist.append(value)
+    
+    whiteSys=open("./result/result_"+containerName+"/syscallslist","r")
+    for line in whiteSys:
+        line=line.strip()
+        if line in syslist:
+           #print(line+"1")
+           if str(line) not in white_list:
+              white_list.append(str(line))
+       
+    whiteSys.close()
     outputFile=open("./result/result_"+containerName+"/"+containerName+"-ConfinePlus.c","w")
-
     seccompTemplate = open("./input/seccomp-allow-1.txt", 'r')
+    seccompTemplate2 = open("./input/seccomp-allow-2.txt", 'r')
     for line in seccompTemplate:
         outputFile.write(line)
     seccompTemplate.close()
-        
-    start=False
-    checked=False
-    blackSyscalls=[]
-    for line in inputFile:
-        if ("Kill" not in line) and (not start):
-            continue
+    file=open("./result/result_"+containerName+"/syscalls","r")
+    sys_names=[]
+    num_args=0
+    for line in file:                      
+        num_args=num_args+1                      
+        line=line.strip()                      
+        tmp=line.split("-->")                      
+        if tmp[0] not in sys_names:                      
+              sys_names.append(tmp[0])
+    for sysCall in white_list:
+        if sysCall in sys_names:
+            file_read=open("./result/result_"+containerName+"/syscalls","r")
+            for line in file_read:
+                tmp=line.split("-->")
+                line=line.strip()
+                if sysCall == tmp[0]:
+                   tmp[1]=tmp[1].strip()
+                   values=tmp[1].split(":")
+                   arg_list=values[1].replace("[","")
+                   arg_list=arg_list.replace("]","")
+                   arg_list=arg_list.split(",")
+                   for val in arg_list:
+                       index=arg_map[values[0]]
+                       outputFile.write(f"AllowWithArg({sysCall},{int(index)},{int(val)}),\n\t")
+                       outputFile.flush()
+            file_read.close()
+             
         else:
-            if "define Kill" in line:
-                continue
-            else:
-                if "Kill" in line:
-                    sysname = line[line.find('(')+1:line.find(')')]
-                    blackSyscalls.append(sysname)
-                    blackProfile.write(sysname+"\n")
-                    start=True
-                    
-                else:
-                    if not checked:
-                       checked=True
-                       allsys_array = []
-                       file=open("./input/cmd1","r")
-                       cmd=""
-                       for line in file:
-                           cmd=cmd+line
-                           (returncode, out1, err) = runCommand(cmd)
-                           if ( returncode != 0 ):
-                               print("extracting system call list fails: " + err)
-                               quit()
-                       file.close()
-                       for line in out1.split('\n'):
-                           line=line.strip()
-                           allsys_array.append(line)
-                       file.close()            
-                       
-                       white_list=[]
-                       for elem in allsys_array:
-                          if elem not in blackSyscalls:
-                             white_list.append(elem)
-                             
-                             
-                       file=open("./result/result_"+containerName+"/syscalls","r")      
-                       sys_names=[]
-                       num_args=0
-                       for line in file:
-                          num_args=num_args+1
-                          line=line.strip()
-                          tmp=line.split("-->")
-                          if tmp[0] not in sys_names:
-                                sys_names.append(tmp[0]) 
-                       evalFile.write("Result for:"+str(containerName)+"\n")
-                       evalFile.write("Num of filtered system calls for arg-filtering: "+str(len(sys_names))+"\n")
-                       evalFile.write("Num of filtered arguments for arg-filtering: "+str(num_args)+"\n")
-                       for sysCall in white_list:
-                            if sysCall in sys_names:
-                                file_read=open("./result/result_"+containerName+"/syscalls","r")
-                                for line in file_read:
-                                    tmp=line.split("-->")
-                                    line=line.strip()
-                                    if sysCall == tmp[0]:
-                                       #args={}
-                                       tmp[1]=tmp[1].strip()
-                                       values=tmp[1].split(":")
-                                       arg_list=values[1].replace("[","")
-                                       arg_list=arg_list.replace("]","")
-                                       arg_list=arg_list.split(",")
-                                       for val in arg_list:
-                                           index=arg_map[values[0]]
-                                           outputFile.write(f"AllowWithArg({sysCall},{int(index)},{int(val)}),\n\t")
-                                           outputFile.flush()
-                                file_read.close()
-                                 
-                            else:
-                                if sysCall!="":
-                                    outputFile.write(f"Allow({sysCall}),\n\t")
-                                    outputFile.flush()
-                       outputFile.write("BPF_STMT(BPF_RET+BPF_K, SECCOMP_RET_KILL),\n")
-                    else:
-                        outputFile.write(line)
-                        outputFile.flush()
+            if sysCall!="":
+                outputFile.write(f"Allow({sysCall}),\n\t")
+                outputFile.flush()
+    outputFile.write("BPF_STMT(BPF_RET+BPF_K, SECCOMP_RET_KILL),\n")
+    for line in seccompTemplate2:
+        outputFile.write(line)
+    seccompTemplate2.close()
     outputFile.close()
-    inputFile.close()
-    blackProfile.close()
-    evalFile.close()
+    os.remove("./result/result_"+containerName+"/syscallslist")
+
 def combine_argument_values(containerName):
     syscalls_w = {}
     dir_list = os.listdir("./output/output_"+containerName+"/")
@@ -176,12 +147,14 @@ def combine_argument_values(containerName):
                                      syscalls_w[key].append(val)
             
             for key, value in syscalls_w.items():
-                if "Undefined" not in value:
+                if ("Undefined" not in str(value)) and ("SP" not in str(value)):
+                    #print(value)
                     i=0
                     for val in value:
                         val=int(val, 16)
                         value[i]=val
                         i=i+1
+                    #missing in glibc call graph
                     if (system_call=="mmap") and (key=="ecx"):
                         add=[2050,50,2066,2]
                         for item in add:

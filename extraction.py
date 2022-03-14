@@ -70,7 +70,7 @@ def extract(name,all_funcs,containerName,libcVersion):
          line=line.strip()
          syslist.append(line)
     syslistFile.close()
-    checking=create_graph(name,libcVersion)
+    checking=create_graph(name,libcVersion,containerName)
     if checking==1:
         func_list=checking_mapping(name,all_funcs)
         arguments_value=Extract_args(func_list,libcVersion)
@@ -79,7 +79,8 @@ def extract(name,all_funcs,containerName,libcVersion):
         return 
                             
               
-def create_graph(name,libcVersion):
+def create_graph(name,libcVersion,containerName):
+    whiteSys=open("./result/result_"+containerName+"/syscallslist","a")
     rootLogger = logging.getLogger("coverage")
     rootLogger.setLevel(logging.DEBUG)
     uniq_calls = util.extractImportedFunctions( "./binaries/"+name , rootLogger)
@@ -103,6 +104,8 @@ def create_graph(name,libcVersion):
             line=line.strip()
             for syscall in syslist:
                 if syscall in line:
+                    tmp=line.split("->")
+                    whiteSys.write(str(tmp[-1])+"\n")
                     if line not in lines:
                       output1.write(line+"\n") 
                       lines.append(line)
@@ -112,7 +115,7 @@ def create_graph(name,libcVersion):
         return 1
     else:
         return 0
-
+    whiteSys.close()
 def Extract_args(func_list,libcVersion):
     arguments_value={}
     with open("./input/syscalls."+libcVersion+".txt") as f:

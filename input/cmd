@@ -1,1 +1,0 @@
-awk 'BEGIN { print "#include <sys/syscall.h>" } /p_syscall_meta/ { syscall = substr($NF, 19); printf "%s\n", syscall }' /proc/kallsyms | sort -u | gcc -E -P -
