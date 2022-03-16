@@ -19,7 +19,7 @@ def runCommand(cmd):
     #return (proc.returncode, out, err)
     
     
-def create_profile(containerName,containerPath):
+def create_profile(containerName):
     white_list=[]
     syscallmap={}
     syscallmap=util.readDictFromFile('./input/AllSyscall')
@@ -76,15 +76,10 @@ def create_profile(containerName,containerPath):
     for line in seccompTemplate2:
         outputFile.write(line)
     seccompTemplate2.close()
-    obj_name=containerPath.split("/")
-    outputFile.write('args[0] ="'+obj_name[-1]+'" \n')
-    outputFile.write('execv("'+containerPath+'", args); \n')
-    outputFile.write('} \n')
     outputFile.close()
     os.remove("./result/result_"+containerName+"/syscallslist")
-    
 
-def combine_argument_values(containerName,containerPath):
+def combine_argument_values(containerName):
     syscalls_w = {}
     dir_list = os.listdir("./output/output_"+containerName+"/")
     f_write = open("./result/result_"+containerName+"/syscalls", "w")
@@ -159,7 +154,7 @@ def combine_argument_values(containerName,containerPath):
                         val=int(val, 16)
                         value[i]=val
                         i=i+1
-                    #missing in glibc call graph
+                    
                     if (system_call=="mmap") and (key=="ecx"):
                         add=[2050,50,2066,2]
                         for item in add:
@@ -173,4 +168,4 @@ def combine_argument_values(containerName,containerPath):
             fix=False
             check=False
     f_write.close()
-    create_profile(containerName,containerPath)
+    create_profile(containerName)
