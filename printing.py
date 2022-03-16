@@ -19,7 +19,7 @@ def runCommand(cmd):
     #return (proc.returncode, out, err)
     
     
-def create_profile(containerName):
+def create_profile(containerName,containerPath):
     white_list=[]
     syscallmap={}
     syscallmap=util.readDictFromFile('./input/AllSyscall')
@@ -76,10 +76,15 @@ def create_profile(containerName):
     for line in seccompTemplate2:
         outputFile.write(line)
     seccompTemplate2.close()
+    obj_name=containerPath.split("/")
+    outputFile.write('args[0] ="'+obj_name[-1]+'" \n')
+    outputFile.write('execv("'+containerPath+'", args); \n')
+    outputFile.write('} \n')
     outputFile.close()
     os.remove("./result/result_"+containerName+"/syscallslist")
+    
 
-def combine_argument_values(containerName):
+def combine_argument_values(containerName,containerPath):
     syscalls_w = {}
     dir_list = os.listdir("./output/output_"+containerName+"/")
     f_write = open("./result/result_"+containerName+"/syscalls", "w")
@@ -168,4 +173,3 @@ def combine_argument_values(containerName):
             fix=False
             check=False
     f_write.close()
-    create_profile(containerName)
