@@ -159,7 +159,7 @@ def combine_argument_values(containerName,containerPath):
                         val=int(val, 16)
                         value[i]=val
                         i=i+1
-                    
+                    #missing in glibc call graph
                     if (system_call=="mmap") and (key=="ecx"):
                         add=[2050,50,2066,2]
                         for item in add:
@@ -173,3 +173,4 @@ def combine_argument_values(containerName,containerPath):
             fix=False
             check=False
     f_write.close()
+    create_profile(containerName,containerPath)
