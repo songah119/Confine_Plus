@@ -16,7 +16,7 @@ import subprocess
 
 global func_added
 
-logging.getLogger('angr').setLevel('WARNING')
+logging.getLogger('angr').setLevel('CRITICAL')
 func_added=[]
 syscallmap = {}
 syslist=[]
@@ -62,7 +62,7 @@ class argument_obj:
                     self.args[reg_splitted[0]]="Undefined"
 
   
-def extract(name,all_funcs,containerName,libcVersion):
+def extract(name,all_funcs,containerName,libcVersion,imported_funcs):
     with open('./input/AllSyscall') as f:
           syscallmap= f.read()
     syslistFile=open("./input/MiniSyscall","r")
@@ -70,7 +70,7 @@ def extract(name,all_funcs,containerName,libcVersion):
          line=line.strip()
          syslist.append(line)
     syslistFile.close()
-    checking=create_graph(name,libcVersion,containerName)
+    checking=create_graph(name,libcVersion,containerName,imported_funcs)
     if checking==1:
         func_list=checking_mapping(name,all_funcs)
         arguments_value=Extract_args(func_list,libcVersion)
@@ -79,11 +79,11 @@ def extract(name,all_funcs,containerName,libcVersion):
         return 
                             
               
-def create_graph(name,libcVersion,containerName):
+def create_graph(name,libcVersion,containerName,imported_funcs):
     whiteSys=open("./result/result_"+containerName+"/syscallslist","a")
     rootLogger = logging.getLogger("coverage")
-    rootLogger.setLevel(logging.DEBUG)
-    uniq_calls = util.extractImportedFunctions( "./binaries/"+name , rootLogger)
+    rootLogger.setLevel(logging.CRITICAL)
+    uniq_calls = imported_funcs
     glibcGraph = graph.Graph(rootLogger)
     glibcGraph.createGraphFromInput("./glibc."+libcVersion+".callgraph", ":")        
     glibcSyscallList=[]

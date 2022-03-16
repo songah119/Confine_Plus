@@ -20,6 +20,3 @@ int main(int argc, char **argv) {
         args[i] = argv[i];
     }
     args[argc] = NULL;
-
-
-}

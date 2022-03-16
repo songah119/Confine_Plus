@@ -37,7 +37,7 @@ class Syscallo:
         self.add = address
 
         
-def main(containerName,libcVersion):
+def main(containerName,libcVersion,containerPath):
     logging.getLogger('angr').setLevel('CRITICAL')
     logger = logging.getLogger('my-logger')
     logger.propagate = False
@@ -63,8 +63,16 @@ def main(containerName,libcVersion):
     global binname
     dir_list = os.listdir("./binaries/")
     for binary in dir_list:
+                  imported_funcs=[]
                   binname=binary
                   proj = angr.Project("./binaries/"+binary, auto_load_libs=False)
+                  for sym in proj.loader.main_object.symbols:
+                     if sym.is_import:
+                        import_func=str(sym)
+                        import_func=import_func.replace('"', "")
+                        splitted_func=import_func.split()
+                        imported_funcs.append(splitted_func[1])
+                  
                   manager = ailment.Manager(arch=proj.arch)
                   try:
                     cfg = proj.analyses.CFGFast(normalize=True)
@@ -74,8 +82,8 @@ def main(containerName,libcVersion):
                   syscalls=detectSysCalls(funcalls)
                   detectFuncalls(syscalls,containerName)
                   detectDirectcalls(containerName)
-                  extraction.extract(binary,all_funcs,containerName,libcVersion)
-    printing.combine_argument_values(containerName)
+                  extraction.extract(binary,all_funcs,containerName,libcVersion,imported_funcs)
+    printing.combine_argument_values(containerName,containerPath)
     
 def extractLibcfuncs(libcVersion):
     proj1 = angr.Project("./input/libc-"+libcVersion+".so", auto_load_libs=False)
