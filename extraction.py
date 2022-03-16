@@ -25,7 +25,7 @@ syslist=[]
 weakalias1 = {}
 weakalias2 = {}
 
-with open("glibc.weak") as f:
+with open("./input/glibc.weak") as f:
     for line1 in f:
         line1=line1.strip()
         (key, val) = line1.split(",")
@@ -85,7 +85,7 @@ def create_graph(name,libcVersion,containerName,imported_funcs):
     rootLogger.setLevel(logging.CRITICAL)
     uniq_calls = imported_funcs
     glibcGraph = graph.Graph(rootLogger)
-    glibcGraph.createGraphFromInput("./glibc."+libcVersion+".callgraph", ":")        
+    glibcGraph.createGraphFromInput("./input/glibc."+libcVersion+".callgraph", ":")        
     glibcSyscallList=[]
     i=0
     while i < 400:
