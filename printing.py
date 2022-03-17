@@ -108,11 +108,7 @@ def combine_argument_values(containerName,containerPath):
                         #print(value)
                         (key, val) = value.split(":")
 
-                        if "-" in key:
-                            keys=key.split("-")
-                            if ("libcrypto" in key) and (check):
-                                val="0x5421"
-                            key=keys[0]
+
                         if fix:
                            key="edi"
                         if syscalls_w.__contains__(key):
@@ -159,7 +155,6 @@ def combine_argument_values(containerName,containerPath):
                         val=int(val, 16)
                         value[i]=val
                         i=i+1
-                    #missing in glibc call graph
                     if (system_call=="mmap") and (key=="ecx"):
                         add=[2050,50,2066,2]
                         for item in add:
