@@ -403,11 +403,7 @@ def getLibNameFromDpkgOutput(dpkgOutput):
     return libname
 
 def readLibrarySourcePathFromFile(libMapFilePath, ignoreList):
-    """
-    Read file with each library mapped to it's source (this should be provided by the user in the following format:
-    libaprutil-1.so.0=>/home/hamed/Documents/StonyBrookUniversity/Hexlab/auto-instrumentation/intel-mpk/openssl-1.0.1f.pdomversion
-    :return:
-    """
+
     libMap = dict()
     with open(libMapFilePath, "r") as libMapFile:
         for libline in libMapFile:
