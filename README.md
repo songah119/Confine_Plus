@@ -2,7 +2,7 @@
 For runing Syscap, you should copy all needed libraries and binaries into `binaries` folder. 
 Plaese be sure that you have installed Angr.
 
-Then, run it (For example:`python3 main.py node 2.31 /usr/local/bin/node` ):
+Then, run it (For example:`python3 main.py nginx 2.31 /usr/sbin/nginx.bak` ):
  ```
   python3 main.py containerName glibcVersion PathtoMainProgram
 ```
