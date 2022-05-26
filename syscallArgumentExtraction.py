@@ -391,9 +391,12 @@ def extract_arguments(func,target: int,objsys,containerName):
             sys.stdout=old_stdout
     
     if "syscall" == objsys.name:
-        registers=mapping(syscall_name)
-    if "syscall" != objsys.name:
-        registers=mapping(objsys.name)
+        if syscall_name=='':
+            return
+        else:
+            registers=mapping(syscall_name)
+    else:
+           registers=mapping(objsys.name)
     for reg in registers:
         edi_offset = proj.arch.registers[reg][0]
         
@@ -520,6 +523,8 @@ def check_manual(block, reg):
 
 def mapping(funcname):
     sysArgs =util.readDictFromFile('./input/AllSyscallArgs')
+    if funcname=='':
+        return 0
     return sysArgs[funcname] 
     
 
