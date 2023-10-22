@@ -1,5 +1,5 @@
-# Syscap
-For runing Syscap, you should copy all needed libraries and binaries into `binaries` folder.
+# Confine
+For runing Confine, you should copy all needed libraries and binaries into `binaries` folder.
 Right now, there are Nginx container's binaries and libraries in this directory.
 Also, you should install Angr.
 
